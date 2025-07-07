@@ -12,9 +12,9 @@ using System.Threading.Tasks;
 namespace NATSWrapper.JetStream
 {
     [Alias(
-        VerbsData.Initialize, "NATSJSStream",
-        VerbsData.Initialize, "NATSJSPublisher",
-        VerbsData.Initialize, "NATSJSStream")]
+        VerbsData.Initialize + "-NATSJSStream",
+        VerbsData.Initialize + "-NATSJSPublisher",
+        VerbsData.Initialize + "-NATSJSStream")]
     [Cmdlet(VerbsData.Initialize, "NATSJetStreamStream")]
     [OutputType(typeof(INatsJSStream))]
     public class InitializeNETSJetStreamStream : Cmdlet
@@ -24,7 +24,7 @@ namespace NATSWrapper.JetStream
             Mandatory = true,
             ValueFromPipeline = true,
             ValueFromPipelineByPropertyName = true)]
-        private INatsJSContext Context { get; set; }
+        public INatsJSContext Context { get; set; }
 
         public INatsClient Client { get; set; }
 

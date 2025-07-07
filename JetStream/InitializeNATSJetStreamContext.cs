@@ -12,7 +12,7 @@ using System.Threading.Tasks.Dataflow;
 
 namespace NATSWrapper.JetStream
 {
-    [Alias(VerbsData.Initialize, "NATSJSContext")]
+    [Alias(VerbsData.Initialize + "-NATSJSContext")]
     [Cmdlet(VerbsData.Initialize, "NATSJetStreamContext")]
     [OutputType(typeof(INatsJSContext))]
     public class InitializeNATSJetStreamContext : PSCmdlet
