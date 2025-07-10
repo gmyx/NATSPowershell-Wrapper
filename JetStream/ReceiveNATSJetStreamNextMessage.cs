@@ -1,26 +1,10 @@
 ﻿using NATS.Client.JetStream;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Management.Automation;
-using System.Security.Cryptography.X509Certificates;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace NATSWrapper.JetStream
 {
-    public struct NATSMessage
-    {
-        public string Subject;
-        public string Message;
-
-        internal NATSMessage(string _subject, string _message)
-        {
-            Subject = _subject;
-            Message = _message;
-        }
-    }
-
     [Alias(VerbsData.Initialize + "-NATSJSNextMessage")]
     [Cmdlet(VerbsCommunications.Receive, "NATSJetStreamNextMessage")]
     [OutputType(typeof(NATSMessage))]
@@ -33,22 +17,37 @@ namespace NATSWrapper.JetStream
             ValueFromPipelineByPropertyName = true)]
         public INatsJSConsumer Consumer { get; set; }
 
+        [Parameter(
+            Position = 1)]
+        public SwitchParameter noack { get; set; } = false;
+
+        [Parameter]
+        public int Timeout { get; set; } = 500;
+
+        private async Task<NATSMessage> GetNextMessage()
+        {
+            NatsJSMsg<string>? next = await Consumer.NextAsync<string>();
+
+            if (next is { } msg)
+            {
+                if (noack == false) await msg.AckAsync();
+                return new NATSMessage(msg.Subject, msg.Data);
+            }
+
+            return new NATSMessage("", ""); // no message
+        }
+
         protected override void ProcessRecord()
         {
-            Task<NATSMessage> task = Task.Run(async () =>
+            try
             {
-                NatsJSMsg<string>? next = await Consumer.NextAsync<string>();
-
-                if (next is { } msg)
-                {
-                    await msg.AckAsync();
-                    return new NATSMessage(msg.Subject, msg.Data);
-                }
-
-                return new NATSMessage("", ""); // no message
-            });
-
-            WriteObject(task.Result); //could be blank
+                var task = AsyncHelper.TimeoutAfter<NATSMessage>(GetNextMessage(), new System.TimeSpan(0, 0, 0, 0, Timeout));
+                WriteObject(task.Result); //could be blank
+            }
+            catch (Exception)
+            {
+                WriteObject(new NATSMessage("", "")); //we don't care about the timeout error
+            }
         }
     }
 }

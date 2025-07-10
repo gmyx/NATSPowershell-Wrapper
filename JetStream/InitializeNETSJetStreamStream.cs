@@ -26,8 +26,6 @@ namespace NATSWrapper.JetStream
             ValueFromPipelineByPropertyName = true)]
         public INatsJSContext Context { get; set; }
 
-        public INatsClient Client { get; set; }
-
         [Parameter(
             Position = 1,
             Mandatory = true)]
@@ -36,18 +34,28 @@ namespace NATSWrapper.JetStream
         [Parameter(
             Position = 2,
             Mandatory = true)]
-        public ICollection<string> Subjects { get; set; }
+        public string[] Subjects { get; set; }
 
         [Parameter(
             Position = 3)]
         [ValidateSet("File", "Memory")]
         public string Storage { get; set; } = "File";
 
+        [Parameter(
+            Position = 4)]
+        public SwitchParameter noack { get; set; } = false;
+
+        [Parameter]
+        [ValidateSet("Limits", "WorkQueue", "Interest")]
+        public string Retention { get; set; } = "Limits";
+
         protected override void ProcessRecord()
         {
             //send to NATS.core
             //create a stream config
             var streamConfig = new StreamConfig(Name, Subjects);
+
+            //handle storage
             switch (Storage)
             {
                 case "File":
@@ -59,8 +67,32 @@ namespace NATSWrapper.JetStream
                     break;
             }
 
+            //rention policy
+            switch (Retention)
+            {
+                case "Limits":
+                    streamConfig.Retention = StreamConfigRetention.Limits;
+                    break;
+
+                case "WorkQueue":
+                    streamConfig.Retention = StreamConfigRetention.Workqueue;
+                    break;
+
+                case "Interest":
+                    streamConfig.Retention = StreamConfigRetention.Interest;
+                    break;
+            }
+
+            //other quick items
+            streamConfig.NoAck = noack;
+
             //add other optiosn later
-            WriteObject(Context.CreateStreamAsync(streamConfig));
+            Task<INatsJSStream> task = Task.Run(async () =>
+            {
+                return await Context.CreateStreamAsync(streamConfig);
+            });
+
+            WriteObject(task);
         }
     }
 }
