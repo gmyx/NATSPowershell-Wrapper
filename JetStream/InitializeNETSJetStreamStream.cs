@@ -12,8 +12,6 @@ using System.Threading.Tasks;
 namespace NATSWrapper.JetStream
 {
     [Alias(
-        VerbsData.Initialize + "-NATSJSStream",
-        VerbsData.Initialize + "-NATSJSPublisher",
         VerbsData.Initialize + "-NATSJSStream")]
     [Cmdlet(VerbsData.Initialize, "NATSJetStreamStream")]
     [OutputType(typeof(INatsJSStream))]
@@ -92,7 +90,7 @@ namespace NATSWrapper.JetStream
                 return await Context.CreateStreamAsync(streamConfig);
             });
 
-            WriteObject(task);
+            WriteObject(task.Result);
         }
     }
 }

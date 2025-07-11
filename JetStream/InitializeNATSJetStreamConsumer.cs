@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace NATSWrapper.JetStream
 {
-    [Alias(VerbsData.Initialize + "-NATSJSNextConsumer")]
+    [Alias(VerbsData.Initialize + "-NATSJSConsumer")]
     [Cmdlet(VerbsData.Initialize, "NATSJetStreamConsumer")]
     [OutputType(typeof(INatsJSConsumer))]
     public class InitializeNATSJetStreamConsumer : Cmdlet
