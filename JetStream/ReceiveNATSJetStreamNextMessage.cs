@@ -1,6 +1,8 @@
-﻿using NATS.Client.JetStream;
+﻿using NATS.Client.Core;
+using NATS.Client.JetStream;
 using System;
 using System.Management.Automation;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace NATSWrapper.JetStream
@@ -24,13 +26,13 @@ namespace NATSWrapper.JetStream
         [Parameter]
         public int Timeout { get; set; } = 500;
 
-        private async Task<NATSMessage> GetNextMessage()
+        private async Task<NATSMessage> GetNextMessage(CancellationToken token)
         {
-            NatsJSMsg<string>? next = await Consumer.NextAsync<string>();
+            NatsJSMsg<string>? next = await Consumer.NextAsync<string>(cancellationToken: token);
 
             if (next is { } msg)
             {
-                if (noack == false) await msg.AckAsync();
+                if (noack == false) _ = msg.AckAsync();
                 return new NATSMessage(msg.Subject, msg.Data);
             }
 
@@ -39,14 +41,18 @@ namespace NATSWrapper.JetStream
 
         protected override void ProcessRecord()
         {
-            try
+            CancellationTokenSource source = new CancellationTokenSource();
+            CancellationToken token = source.Token;
+
+            var getNext = GetNextMessage(token);
+            bool success = Task.WaitAll([getNext], Timeout, token);
+            if (success == true)
             {
-                var task = AsyncHelper.TimeoutAfter<NATSMessage>(GetNextMessage(), new System.TimeSpan(0, 0, 0, 0, Timeout));
-                WriteObject(task.Result); //could be blank
+                WriteObject(getNext.Result); //could be blank
             }
-            catch (Exception)
+            else
             {
-                WriteObject(new NATSMessage("", "")); //we don't care about the timeout error
+                source.Cancel();
             }
         }
     }

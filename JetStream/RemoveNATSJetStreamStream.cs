@@ -28,7 +28,7 @@ namespace NATSWrapper.JetStream
 
         protected override void ProcessRecord()
         {
-            Context.DeleteStreamAsync(Stream.Info.Config.Name);
+            _ = Context.DeleteStreamAsync(Stream.Info.Config.Name);
         }
     }
 }

@@ -33,7 +33,7 @@ namespace NATSWrapper.JetStream
 
         protected override void ProcessRecord()
         {
-            Context.DeleteConsumerAsync(Stream.Info.Config.Name, Consumer.Info.Config.Name);
+            _ = Context.DeleteConsumerAsync(Stream.Info.Config.Name, Consumer.Info.Config.Name);
         }
     }
 }

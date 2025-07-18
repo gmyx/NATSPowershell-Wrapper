@@ -35,7 +35,8 @@ namespace NATSWrapper.JetStream
         protected override void ProcessRecord()
         {
             ConsumerConfig consumerConfig = new ConsumerConfig(Name);
-            //not ideal, but PS is not easliy async - and the command expects a results. Maybe using End would be better
+
+            //no cancelation token - we will wait for completion
             var task = Task.Run<INatsJSConsumer>(async () => await Context.CreateOrUpdateConsumerAsync(Stream, consumerConfig));
 
             WriteObject(task.Result);
